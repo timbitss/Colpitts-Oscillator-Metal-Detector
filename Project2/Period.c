@@ -7,7 +7,19 @@
 #include <avr/interrupt.h>
 #include "usart.h"
 
+#define DEF_FREQ 2048L
+#define OCR1_RELOAD ((F_CPU/(2*DEF_FREQ))+1)
+
+volatile unsigned int reload;
+
 unsigned int cnt = 0;
+
+// 'Timer 1 output compare A' Interrupt Service Routine
+ISR(TIMER1_COMPA_vect)
+{
+	OCR1A = OCR1A + reload;
+	PORTC ^= 0b00000001; // Toggle PB2 PORTB ^= 0b00000011; 
+}
 
 void wait_1ms(void)
 {
@@ -68,6 +80,16 @@ int main(void)
 {
 	long int count;
 	float T, f;
+
+	
+	reload=OCR1_RELOAD; // Reload value for default output frequency 
+
+	DDRC=0b00000001; // PB1 (pin 15) and PB0 (pin 14) are our outputs
+	PORTC |= 0x01; // PB0=NOT(PB1)
+	TCCR1B |= _BV(CS10);   // set prescaler to Clock/1
+	TIMSK1 |= _BV(OCIE1A); // output compare match interrupt for register A
+	
+	cli(); // clear global interupts
 	
 	usart_init(); // Configure the usart and baudrate
 	
@@ -93,10 +115,12 @@ int main(void)
 			f=1/T;
 			printf("f=%fHz (count=%lu)     \r", f, count);
 			if(f > 3100.0){ //turn LED on
-			PORTB &= 0b00000010;
+			PORTB &= 0b00000010; 
+			sei(); //turn on buzzer
 			}
 			else{
 			PORTB = 0b00000011; //turn LED off
+			cli(); //turn off buzzer
 			}
 		}
 		else
