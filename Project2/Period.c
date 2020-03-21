@@ -18,7 +18,7 @@ unsigned int cnt = 0;
 ISR(TIMER1_COMPA_vect)
 {
 	OCR1A = OCR1A + reload;
-	PORTC ^= 0b00000001; // Toggle PB2 PORTB ^= 0b00000011; 
+	PORTC ^= 0b00000001; // Toggle PC0 
 }
 
 void wait_1ms(void)
@@ -84,8 +84,8 @@ int main(void)
 	
 	reload=OCR1_RELOAD; // Reload value for default output frequency 
 
-	DDRC=0b00000001; // PB1 (pin 15) and PB0 (pin 14) are our outputs
-	PORTC |= 0x01; // PB0=NOT(PB1)
+	DDRC=0b00000001; // PC0 will generate output frequency
+	PORTC |= 0x01; // PB0=NOT(PB1) no clue what this means
 	TCCR1B |= _BV(CS10);   // set prescaler to Clock/1
 	TIMSK1 |= _BV(OCIE1A); // output compare match interrupt for register A
 	
